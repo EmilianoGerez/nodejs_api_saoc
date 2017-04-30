@@ -12,7 +12,7 @@ exports.syncDrivers = function (req, res) {
 
   if (!drivers || drivers.length < 1) {
     return res.status(400).send({
-      message: "Error en el envio de proveedores"
+      message: "Error al enviar conductores"
     });
   }
 
@@ -29,27 +29,24 @@ exports.syncDrivers = function (req, res) {
         }
       }, {
         returnOriginal: false
-      }).then(response => {
+      }).then(driverUpdated => {
 
-        if (response) {
-          syncSuccessList.push(response.driverLocalId);
-          resolve(response.driverLocalId);
-        } else {
-          createDriver(driver)
-            .then((response) => {
-              syncSuccessList.push(response.driverLocalId);
-              resolve(response.driverLocalId);
-            })
-            .catch(error => {
-              syncErrorList.push(driver.id);
-              reject(driver.id);
-            });
-        }
-
-      }).catch(error => {
-        syncErrorList.push(driver.id);
-        reject(driver.id);
-      });
+          if (driverUpdated) {
+            syncSuccessList.push(driverUpdated.driverLocalId);
+            resolve(driverUpdated.driverLocalId);
+          } else {
+            return createDriver(driver);
+          }
+        }).then((driverCreated) => {
+          if(!driverCreated) return;
+          syncSuccessList.push(driverCreated.driverLocalId);
+          resolve(driverCreated.driverLocalId);
+        })
+        .catch(error => {
+          if(!error) return;
+          syncErrorList.push(driver.id);
+          reject(driver.id);
+        });
 
     }));
 

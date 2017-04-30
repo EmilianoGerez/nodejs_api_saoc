@@ -1,7 +1,47 @@
 const mongoose = require('mongoose');
 const Bill = mongoose.model("Bill");
-const _ = require('lodash');
+const Supplier = mongoose.model("Supplier");
+const Product = mongoose.model("Product");
+const moment = require('moment');
 
+
+exports.findBillById = function (req, res) {
+  Bill
+    .findById(req.params.id)
+    .populate("billSupplierId")
+    .populate("billDetail.billDetailProductId")
+    .exec()
+    .then(bill => {
+      if (!bill) return res.status(404).send({
+        message: "No se econtro la factura"
+      });
+      return res.status(200).send(bill);
+    })
+    .catch(error => res.status(500).send(error));
+}
+
+exports.findByDateRange = function (req, res) {
+  var start = moment.unix(req.params.from).toDate();
+  var end = moment.unix(req.params.to).toDate();
+
+  Bill
+    .find({
+      billDate: {
+        $gte: new Date(start.toISOString()),
+        $lt: new Date(end.toISOString())
+      }
+    }, 'billDetail')
+    .populate('billDetail.billDetailProductId')
+    .then(bills => {
+      if (bills.length < 1) return res.status(404).send({
+        message: "No se econtraron facturas"
+      });
+      return res.status(200).send({
+       bills
+      })
+    })
+    .catch(error => res.status(500).send(error));
+};
 
 exports.syncBills = function (req, res) {
   debugger;
@@ -19,39 +59,38 @@ exports.syncBills = function (req, res) {
   bills.forEach((bill, index) => {
 
     promisesList.push(new Promise((resolve, reject) => {
+      getSupplierAndDetails(bill.supplier.id, bill.detail)
+        .then(supplierAndDetails => {
+          return Bill.findOneAndUpdate({
+            'billLocalId': bill.id
+          }, {
+            $set: {
+              billNumber: bill.number,
+              billDate: moment(bill.date),
+              billSupplierId: supplierAndDetails.supplier._id,
+              billDetail: supplierAndDetails.details
+            }
+          }, {
+            returnOriginal: false
+          });
+        }).then(billUpdated => {
 
-      Bill.findOneAndUpdate({
-        'billLocalId': bill.id
-      }, {
-        $set: {
-          billNumber: bill.number,
-          billDate: bill.date,
-          billSupplierId: bill.supplier.id,
-          billDetail: getBillDetail(bill.detail)
-        }
-      }, {
-        returnOriginal: false
-      }).then(response => {
-
-        if (response) {
-          syncSuccessList.push(response.billLocalId);
-          resolve(response.billLocalId);
-        } else {
-          createBill(bill)
-            .then((response) => {
-              syncSuccessList.push(response.billLocalId);
-              resolve(response.billLocalId);
-            })
-            .catch(error => {
-              syncErrorList.push(bill.id);
-              reject(bill.id);
-            });
-        }
-
-      }).catch(error => {
-        syncErrorList.push(bill.id);
-        reject(bill.id);
-      });
+          if (billUpdated) {
+            syncSuccessList.push(billUpdated.billLocalId);
+            resolve(billUpdated.billLocalId);
+          } else {
+            return createBill(bill);
+          }
+        }).then((billCreated) => {
+          if (!billCreated) return;
+          syncSuccessList.push(billCreated.billLocalId);
+          resolve(billCreated.billLocalId);
+        })
+        .catch(error => {
+          if (!error) return;
+          syncErrorList.push(bill.id);
+          reject(bill.id);
+        });
 
     }));
 
@@ -74,24 +113,66 @@ exports.syncBills = function (req, res) {
 };
 
 function createBill(bill) {
-  var billBody = {
-    billNumber: bill.number,
-    billDate: bill.date,
-    billSupplierId: bill.supplier.id,
-    billDetail: getBillDetail(bill.detail),
-    billLocalId: bill.id
-  };
-  var newBill = new Bill(billBody);
+  return getSupplierAndDetails(bill.supplier.id, bill.detail)
+    .then(supplierAndDetails => {
+      var billBody = {
+        billNumber: bill.number,
+        billDate: moment(bill.date),
+        billSupplierId: supplierAndDetails.supplier._id,
+        billDetail: supplierAndDetails.details,
+        billLocalId: bill.id
+      };
+      var newBill = new Bill(billBody);
 
-  return newBill.save();
+      return newBill.save();
+    });
 }
 
-function getBillDetail(detail) {
-  return detail.map(e => {
-    return {
-      billDetailId: e.id,
-      billDetailProductId: e.product.id,
-      billDetailQuantity: e.quantity
-    };
+function getSupplierByLocalId(supplierId) {
+  return Supplier.findOne({
+      'supplierLocalId': supplierId
+    })
+    .then(supplier => {
+      return supplier;
+    })
+    .catch(error => {
+      throw error;
+    });
+}
+
+function getSupplierAndDetails(supplierId, details) {
+  var productPromiseList = [];
+  var detailMappedList = [];
+
+  productPromiseList.push(getSupplierByLocalId(supplierId));
+
+  details.forEach(detail => {
+    productPromiseList.push(
+      Product.findOne({
+        'productLocalId': detail.product.id
+      })
+      .then(product => {
+        if (!product) throw "Producto no encontrado";
+        return detailMappedList.push({
+          billDetailId: detail.id,
+          billDetailProductId: product._id,
+          billDetailQuantity: detail.quantity
+        });
+      }).catch(error => {
+        throw error;
+      })
+    );
   });
+
+  return Promise.all(productPromiseList)
+    .then(requiredData => {
+      var supplier = requiredData.splice(0, 1)[0];
+      return {
+        supplier: supplier,
+        details: detailMappedList
+      };
+    })
+    .catch(error => {
+      throw error;
+    });
 }

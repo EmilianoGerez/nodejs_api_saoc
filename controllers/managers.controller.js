@@ -29,27 +29,24 @@ exports.syncManagers = function (req, res) {
         }
       }, {
         returnOriginal: false
-      }).then(response => {
+      }).then(managerUpdated => {
 
-        if (response) {
-          syncSuccessList.push(response.managerLocalId);
-          resolve(response.managerLocalId);
-        } else {
-          createManager(manager)
-            .then((response) => {
-              syncSuccessList.push(response.managerLocalId);
-              resolve(response.managerLocalId);
-            })
-            .catch(error => {
-              syncErrorList.push(manager.id);
-              reject(manager.id);
-            });
-        }
-
-      }).catch(error => {
-        syncErrorList.push(manager.id);
-        reject(manager.id);
-      });
+          if (managerUpdated) {
+            syncSuccessList.push(managerUpdated.managerLocalId);
+            resolve(managerUpdated.managerLocalId);
+          } else {
+            return createManager(manager);
+          }
+        }).then((managerCreated) => {
+          if(!managerCreated) return;
+          syncSuccessList.push(managerCreated.managerLocalId);
+          resolve(managerCreated.managerLocalId);
+        })
+        .catch(error => {
+          if(!error) return;
+          syncErrorList.push(manager.id);
+          reject(manager.id);
+        });
 
     }));
 

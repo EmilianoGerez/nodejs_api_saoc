@@ -29,27 +29,24 @@ exports.syncTransports = function (req, res) {
         }
       }, {
         returnOriginal: false
-      }).then(response => {
+      }).then(transportUpdated => {
 
-        if (response) {
-          syncSuccessList.push(response.transportLocalId);
-          resolve(response.transportLocalId);
-        } else {
-          createTransport(transport)
-            .then((response) => {
-              syncSuccessList.push(response.transportLocalId);
-              resolve(response.transportLocalId);
-            })
-            .catch(error => {
-              syncErrorList.push(transport.id);
-              reject(transport.id);
-            });
-        }
-
-      }).catch(error => {
-        syncErrorList.push(transport.id);
-        reject(transport.id);
-      });
+          if (transportUpdated) {
+            syncSuccessList.push(transportUpdated.transportLocalId);
+            resolve(transportUpdated.transportLocalId);
+          } else {
+            return createTransport(transport);
+          }
+        }).then((transportCreated) => {
+          if(!transportCreated) return;
+          syncSuccessList.push(transportCreated.transportLocalId);
+          resolve(transportCreated.transportLocalId);
+        })
+        .catch(error => {
+          if(!error) return;
+          syncErrorList.push(transport.id);
+          reject(transport.id);
+        });
 
     }));
 

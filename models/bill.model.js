@@ -12,13 +12,15 @@ var BillSchema = new Schema({
   },
   billSupplierId: {
     type: Schema.Types.ObjectId,
-    ref: 'Supplier'
+    ref: 'Supplier',
+    required: true
   },
   billDetail: [{
     billDetailId: Number,
     billDetailProductId: {
       type: Schema.Types.ObjectId,
-      ref: 'Product'
+      ref: 'Product',
+      required: true
     },
     billDetailQuantity: Number,
   }],

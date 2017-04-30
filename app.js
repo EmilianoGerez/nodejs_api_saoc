@@ -23,6 +23,8 @@ var transportModel = require('./models/transport.model');
 var productModel = require('./models/product.model');
 var workModel = require('./models/work.model');
 var billModel = require('./models/bill.model');
+var orderDispatchModel = require('./models/orderDispatch.model');
+var devolutionModel = require('./models/devolution.model');
 
 // Routes
 var index = require('./routes/index');
@@ -33,6 +35,8 @@ var transports = require('./routes/transports.route');
 var works = require('./routes/works.route');
 var products = require('./routes/products.route');
 var bills = require('./routes/bills.route');
+var orders = require('./routes/orderDispatch.route');
+var devolutions = require('./routes/devolutions.route');
 
 var app = express();
 
@@ -56,6 +60,8 @@ app.use('/api/transports', transports);
 app.use('/api/works', works);
 app.use('/api/products', products);
 app.use('/api/bills', bills);
+app.use('/api/orders', orders);
+app.use('/api/devolutions', devolutions);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

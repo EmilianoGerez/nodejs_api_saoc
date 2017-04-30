@@ -8,7 +8,8 @@ var WorkSchema = new Schema({
   },
   workManagerId: {
     type: Schema.Types.ObjectId,
-    ref: 'Manager'
+    ref: 'Manager',
+    required: true
   },
   workAddress: {
     type: String,

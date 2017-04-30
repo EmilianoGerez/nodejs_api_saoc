@@ -3,9 +3,7 @@ var router = express.Router();
 var productCtrl = require('../controllers/products.controller');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+router.get('/', productCtrl.findAll);
 
 router.post('/sync', productCtrl.syncProducts);
 
