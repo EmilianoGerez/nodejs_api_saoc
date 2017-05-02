@@ -4,7 +4,6 @@ const _ = require('lodash');
 
 
 exports.syncTransports = function (req, res) {
-  debugger;
   const transports = req.body;
   var syncSuccessList = [];
   var syncErrorList = [];

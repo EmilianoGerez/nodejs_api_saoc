@@ -24,21 +24,22 @@ exports.findSupplierAndBills = function (req, res) {
       supplierData = supplier;
       return Bill.find({
         'billSupplierId': supplier._id
-      });
+      })
+      .select("billNumber billDate billLocalId");
     })
     .then(bills => {
       if (!bills) return res.status(404).send(supplierData);
-      var billsMapped = bills.map(e => {
-        return {
-          _id: e._id,
-          billNumber: e.billNumber,
-          billDate: e.billDate,
-          billLocalId: e.billLocalId
-        };
-      });
+      // var billsMapped = bills.map(e => {
+      //   return {
+      //     _id: e._id,
+      //     billNumber: e.billNumber,
+      //     billDate: e.billDate,
+      //     billLocalId: e.billLocalId
+      //   };
+      // });
       return res.status(200).send({
         supplier: supplierData,
-        bills: billsMapped
+        bills: bills
       });
     })
     .catch(error => res.status(500).send(error));

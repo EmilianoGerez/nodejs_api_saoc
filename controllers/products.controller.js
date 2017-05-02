@@ -15,7 +15,6 @@ exports.findAll = function (req, res) {
 
 
 exports.syncProducts = function (req, res) {
-  debugger;
   const products = req.body;
   var syncSuccessList = [];
   var syncErrorList = [];

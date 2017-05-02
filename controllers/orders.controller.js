@@ -4,10 +4,12 @@ const Transport = mongoose.model("Transport");
 const Driver = mongoose.model("Driver");
 const Work = mongoose.model("Work");
 const Product = mongoose.model("Product");
+const Manager = mongoose.model("Manager");
 const moment = require('moment');
 
 
 exports.findOrderDispatchById = function (req, res) {
+  var orderData = null;
   OrderDispatch
     .findById(req.params.id)
     .populate("orderTransportId")
@@ -16,10 +18,17 @@ exports.findOrderDispatchById = function (req, res) {
     .populate("orderDetail.orderDetailProductId")
     .exec()
     .then(order => {
+      orderData = order;
       if (!order) return res.status(404).send({
-        message: "No se econtro la factura"
+        message: "No se econtro el remito"
       });
-      return res.status(200).send(order);
+      return Manager.findById(order.orderWorkId.workManagerId);
+    })
+    .then(manager => {
+      return res.status(200).send({
+        manager,
+        order: orderData
+      });
     })
     .catch(error => res.status(500).send(error));
 }
@@ -38,7 +47,7 @@ exports.findByDateRange = function (req, res) {
     .populate('orderDetail.orderDetailProductId')
     .then(orders => {
       if (orders.length < 1) return res.status(404).send({
-        message: "No se econtraron facturas"
+        message: "No se econtraron remitos"
       });
       return res.status(200).send({
         orders
@@ -48,7 +57,6 @@ exports.findByDateRange = function (req, res) {
 };
 
 exports.syncOrderDispatchs = function (req, res) {
-  debugger;
   const orders = req.body;
   var syncSuccessList = [];
   var syncErrorList = [];
@@ -56,7 +64,7 @@ exports.syncOrderDispatchs = function (req, res) {
 
   if (!orders || orders.length < 1) {
     return res.status(400).send({
-      message: "Error en el envio de facturas"
+      message: "Error en el envio del remito"
     });
   }
 

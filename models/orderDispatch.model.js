@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+const moment = require('moment');
 
 var OrderDispatchSchema = new Schema({
   orderNumber: {
@@ -39,6 +40,17 @@ var OrderDispatchSchema = new Schema({
     required: true,
     unique: true
   }
+}, {
+  toObject: {
+    virtuals: true
+  },
+  toJSON: {
+    virtuals: true
+  }
+});
+
+OrderDispatchSchema.virtual('orderDateTimestamp').get(function () {
+  return moment(this.orderDate).unix();
 });
 
 module.exports = mongoose.model("OrderDispatch", OrderDispatchSchema);

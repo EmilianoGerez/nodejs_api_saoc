@@ -4,7 +4,6 @@ const _ = require('lodash');
 
 
 exports.syncDrivers = function (req, res) {
-  debugger;
   const drivers = req.body;
   var syncSuccessList = [];
   var syncErrorList = [];

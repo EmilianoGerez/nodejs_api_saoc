@@ -5,7 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-
+var cors = require('cors');
 
 // Use bluebird
 var configDB = require('./configs/db.config');
@@ -25,6 +25,7 @@ var workModel = require('./models/work.model');
 var billModel = require('./models/bill.model');
 var orderDispatchModel = require('./models/orderDispatch.model');
 var devolutionModel = require('./models/devolution.model');
+var syncDetailModel = require('./models/syncDetail.model');
 
 // Routes
 var index = require('./routes/index');
@@ -37,6 +38,7 @@ var products = require('./routes/products.route');
 var bills = require('./routes/bills.route');
 var orders = require('./routes/orderDispatch.route');
 var devolutions = require('./routes/devolutions.route');
+var syncDetails = require('./routes/syncDetails.route');
 
 var app = express();
 
@@ -46,6 +48,7 @@ app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(cors());
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -62,6 +65,7 @@ app.use('/api/products', products);
 app.use('/api/bills', bills);
 app.use('/api/orders', orders);
 app.use('/api/devolutions', devolutions);
+app.use('/api/syncDetails', syncDetails);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

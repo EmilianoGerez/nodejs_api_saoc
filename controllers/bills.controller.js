@@ -44,7 +44,6 @@ exports.findByDateRange = function (req, res) {
 };
 
 exports.syncBills = function (req, res) {
-  debugger;
   const bills = req.body;
   var syncSuccessList = [];
   var syncErrorList = [];

@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var moment = require('moment');
 
 var BillSchema = new Schema({
   billNumber: {
@@ -29,6 +30,17 @@ var BillSchema = new Schema({
     required: true,
     unique: true
   }
+}, {
+  toObject: {
+    virtuals: true
+  },
+  toJSON: {
+    virtuals: true
+  }
+});
+
+BillSchema.virtual('billDateTimestamp').get(function () {
+  return moment(this.billDate).unix();
 });
 
 module.exports = mongoose.model("Bill", BillSchema);

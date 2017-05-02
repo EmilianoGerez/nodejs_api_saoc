@@ -113,7 +113,6 @@ function getWorkOrdersAndDevolutions(workId, ordersParams, devolutionsParams, ca
 
 
 exports.syncWorks = function (req, res) {
-  debugger;
   const works = req.body;
   var syncSuccessList = [];
   var syncErrorList = [];

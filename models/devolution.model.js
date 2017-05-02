@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+const moment = require('moment');
 
 var DevolutionSchema = new Schema({
   devolutionNumber: {
@@ -33,6 +34,18 @@ var DevolutionSchema = new Schema({
     required: true,
     unique: true
   }
+}, {
+  toObject: {
+    virtuals: true
+  },
+  toJSON: {
+    virtuals: true
+  }
 });
+
+DevolutionSchema.virtual('devolutionDateTimestamp').get(function () {
+  return moment(this.devolutionDate).unix();
+});
+
 
 module.exports = mongoose.model("Devolution", DevolutionSchema);

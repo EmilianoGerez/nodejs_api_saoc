@@ -2,20 +2,30 @@ const mongoose = require('mongoose');
 const Devolution = mongoose.model("Devolution");
 const Work = mongoose.model("Work");
 const Product = mongoose.model("Product");
+const Manager = mongoose.model("Manager");
 const moment = require('moment');
 
 
 exports.findDevolutionById = function (req, res) {
+  var devolutionData = null;
   Devolution
     .findById(req.params.id)
     .populate("devolutionWorkId")
     .populate("devolutionDetail.devolutionDetailProductId")
     .exec()
     .then(devolution => {
+      devolutionData = devolution;
       if (!devolution) return res.status(404).send({
         message: "No se econtro la factura"
       });
-      return res.status(200).send(devolution);
+      return Manager.findById(devolution.devolutionWorkId.workManagerId);
+
+    })
+    .then(manager => {
+      return res.status(200).send({
+        manager,
+        devolution: devolutionData
+      });
     })
     .catch(error => res.status(500).send(error));
 }
@@ -37,14 +47,13 @@ exports.findByDateRange = function (req, res) {
         message: "No se econtraron facturas"
       });
       return res.status(200).send({
-       devolutions
+        devolutions
       })
     })
     .catch(error => res.status(500).send(error));
 };
 
 exports.syncDevolutions = function (req, res) {
-  debugger;
   const devolutions = req.body;
   var syncSuccessList = [];
   var syncErrorList = [];
